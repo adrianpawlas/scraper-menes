@@ -156,12 +156,12 @@ class ProductScraper:
             "title": title,
             "description": description,
             "category": category,
-            "gender": gender,
+            "gender": None,
             "price": price,
             "sale": sale,
             "metadata": metadata,
             "second_hand": False,
-            "country": "JP",
+            "country": None,
         }
 
     def extract_product_id(self, html: str, url: str) -> str:

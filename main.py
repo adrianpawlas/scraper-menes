@@ -3,7 +3,7 @@ import logging
 import sys
 import time
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 
 import config
 from scraper import ShopifyScraper, ProductScraper
