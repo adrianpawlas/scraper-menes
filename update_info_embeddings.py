@@ -33,7 +33,7 @@ async def update_missing_info_embeddings():
         
         try:
             html = await scraper.fetch_product_page(url)
-            product_data = scraper.extract_product_data(html, url)
+            product_data = await scraper.extract_product_data(html, url)
             
             if product_data:
                 info_emb = generator.get_info_embedding(product_data)

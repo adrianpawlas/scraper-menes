@@ -119,7 +119,7 @@ class ProductScraper:
             logger.error(f"Failed to fetch product {url}: {e}")
             raise
 
-    def extract_product_data(self, html: str, url: str) -> Optional[Dict]:
+    async def extract_product_data(self, html: str, url: str) -> Optional[Dict]:
         soup = BeautifulSoup(html, "lxml")
 
         title = soup.find("h1")
@@ -130,7 +130,7 @@ class ProductScraper:
 
         product_id = self.extract_product_id(html, url)
 
-        price, sale = self.extract_prices(soup, html)
+        price, sale = await self.get_all_prices(url)
 
         description = self.extract_description(soup)
 
@@ -140,7 +140,7 @@ class ProductScraper:
 
         category = self.extract_category(soup, html)
 
-        gender = self.extract_gender(soup, html)
+        gender = None
 
         sizes = self.extract_sizes(soup, html)
 
@@ -203,6 +203,45 @@ class ProductScraper:
                 price = price_elem.text.strip()
 
         return price, sale
+
+    async def get_price_in_currency(self, url: str, currency: str) -> Optional[str]:
+        try:
+            currency_url = f"{url}?currency={currency}"
+            html = await self.fetch_product_page(currency_url)
+            if not html:
+                return None
+
+            import re
+            import json
+
+            meta_match = re.search(r'var meta = (\{.*?\});', html, re.DOTALL)
+            if meta_match:
+                meta = json.loads(meta_match.group(1))
+                product = meta.get("product", {})
+                if "variants" in product and product["variants"]:
+                    price = product["variants"][0].get("price", 0)
+                    if price:
+                        return f"{price / 100:.2f}{currency}"
+            return None
+        except Exception as e:
+            logger.debug(f"Failed to get price in {currency}: {e}")
+            return None
+
+    async def get_all_prices(self, url: str) -> tuple:
+        prices = []
+        sale_prices = []
+
+        currencies = ["EUR", "USD", "CZK", "JPY", "GBP"]
+        
+        for currency in currencies:
+            price = await self.get_price_in_currency(url, currency)
+            if price:
+                prices.append(price)
+        
+        if prices:
+            return ", ".join(prices), None
+        
+        return None, None
 
     def extract_description(self, soup: BeautifulSoup) -> Optional[str]:
         desc_elem = soup.select_one('[data-testid="product-description"], .product-description, #product-description, .product-detail__description')

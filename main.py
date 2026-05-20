@@ -130,7 +130,7 @@ class MenesScraper:
                 logger.error(f"Failed to fetch product page: {url}")
                 return None
 
-            product_data = self.product_scraper.extract_product_data(html, url)
+            product_data = await self.product_scraper.extract_product_data(html, url)
             if not product_data:
                 logger.error(f"Failed to extract product data: {url}")
                 return None
